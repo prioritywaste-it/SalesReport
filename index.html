@@ -4,202 +4,253 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Priority Waste · Sales Wallboard</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Open+Sans:wght@400;600;700;800&display=swap" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" />
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
+  /* ============ DESIGN SYSTEM ============
+     Restrained palette:
+     - Yellow (#FFC20E): brand accent, used sparingly for emphasis (ranks, key totals)
+     - Off-white (#e8e8e8): default text
+     - Muted grays: structure, backgrounds, supporting data
+     - Red (#e74c3c): only for losses/churn
+     - Green (#27ae60): only for top performance/wins
+     Everything else neutral.
+  */
   :root {
     --yellow: #FFC20E;
-    --yellow-d: #cc9900;
+    --yellow-soft: #FFD752;
     --black: #000000;
-    --gray-d: #1a1a1a;
-    --gray-m: #2a2a2a;
-    --white: #FFFFFF;
-    --red: #ff3838;
-    --red-bg: #2a0808;
-    --green: #2ecc71;
-    --green-bg: #0a2a15;
-    --blue: #3498db;
-    --blue-bg: #0a1a2a;
-    --orange: #f39c12;
+    --bg: #0d0d0d;
+    --panel: #161616;
+    --panel-2: #1f1f1f;
+    --border: #2d2d2d;
+    --border-strong: #3a3a3a;
+    --text: #e8e8e8;
+    --text-dim: #999999;
+    --text-muted: #666666;
+    --red: #e74c3c;
+    --red-bg: #1f0a0a;
+    --green: #27ae60;
+    --green-bg: #0a1f12;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body { height: 100%; overflow: hidden; }
-  body { font-family: 'Open Sans', system-ui, sans-serif; background: var(--black); color: var(--white); font-size: 13px; }
-  .display { font-family: 'Oswald', sans-serif; }
+  body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); font-size: 13px; -webkit-font-smoothing: antialiased; }
+  .display { font-family: 'Oswald', sans-serif; letter-spacing: 0.01em; }
 
   /* UPLOAD */
-  .upload-screen { height: 100vh; width: 100vw; display: flex; align-items: center; justify-content: center; background: var(--black); padding: 40px; }
-  .upload-box { max-width: 680px; width: 100%; padding: 48px; background: var(--gray-d); border: 4px solid var(--yellow); }
+  .upload-screen { height: 100vh; width: 100vw; display: flex; align-items: center; justify-content: center; background: var(--bg); padding: 40px; }
+  .upload-box { max-width: 680px; width: 100%; padding: 48px; background: var(--panel); border: 2px solid var(--border-strong); }
   .upload-logo { display: flex; align-items: center; gap: 16px; margin-bottom: 32px; }
-  .logo-mark { width: 56px; height: 56px; background: var(--yellow); color: var(--black); display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: 900; }
-  .upload-title { font-family: 'Oswald', sans-serif; font-size: 48px; font-weight: 900; line-height: 1; color: var(--white); text-transform: uppercase; margin-bottom: 8px; }
-  .upload-title .hl { background: var(--yellow); color: var(--black); padding: 0 10px; }
-  .upload-sub { font-size: 15px; color: #aaa; margin-bottom: 28px; line-height: 1.5; }
-  .drop-zone { display: block; cursor: pointer; padding: 40px; text-align: center; border: 3px dashed var(--yellow); background: var(--black); transition: background 0.15s; }
-  .drop-zone:hover, .drop-zone.dragging { background: var(--gray-m); }
-  .drop-icon { font-size: 48px; margin-bottom: 12px; }
-  .drop-title { font-family: 'Oswald', sans-serif; font-size: 22px; font-weight: 900; text-transform: uppercase; color: var(--yellow); }
-  .drop-sub { font-size: 11px; color: #888; margin-top: 6px; font-weight: 700; }
-  .error-banner { margin-top: 16px; padding: 14px; background: var(--red); color: var(--white); font-weight: 800; font-size: 13px; }
+  .logo-mark { width: 52px; height: 52px; background: var(--yellow); color: var(--black); display: flex; align-items: center; justify-content: center; font-size: 26px; font-weight: 900; }
+  .upload-title { font-family: 'Oswald', sans-serif; font-size: 44px; font-weight: 700; line-height: 1.05; color: var(--text); text-transform: uppercase; margin-bottom: 8px; letter-spacing: -0.01em; }
+  .upload-title .hl { color: var(--yellow); }
+  .upload-sub { font-size: 14px; color: var(--text-dim); margin-bottom: 28px; line-height: 1.6; }
+  .drop-zone { display: block; cursor: pointer; padding: 40px; text-align: center; border: 2px dashed var(--border-strong); background: var(--bg); transition: all 0.15s; }
+  .drop-zone:hover, .drop-zone.dragging { background: var(--panel-2); border-color: var(--yellow); }
+  .drop-icon { font-size: 40px; margin-bottom: 12px; opacity: 0.6; }
+  .drop-title { font-family: 'Oswald', sans-serif; font-size: 20px; font-weight: 700; text-transform: uppercase; color: var(--yellow); }
+  .drop-sub { font-size: 11px; color: var(--text-muted); margin-top: 8px; font-weight: 500; }
+  .error-banner { margin-top: 16px; padding: 14px; background: var(--red-bg); border: 1px solid var(--red); color: var(--red); font-weight: 600; font-size: 13px; }
 
   /* WALLBOARD */
   .wallboard { display: none; height: 100vh; width: 100vw; flex-direction: column; }
   .wallboard.active { display: flex; }
 
   /* TOP BAR */
-  .top-bar { flex-shrink: 0; display: flex; align-items: center; justify-content: space-between; padding: 6px 16px; background: var(--black); border-bottom: 2px solid var(--yellow); height: 44px; }
+  .top-bar {
+    flex-shrink: 0; display: flex; align-items: center; justify-content: space-between;
+    padding: 8px 16px; background: var(--panel); border-bottom: 1px solid var(--border-strong);
+    height: 50px;
+  }
   .brand-block { display: flex; align-items: center; gap: 10px; }
-  .brand-mark { width: 30px; height: 30px; background: var(--yellow); color: var(--black); display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 900; }
-  .brand-name { font-family: 'Oswald', sans-serif; font-size: 16px; font-weight: 900; color: var(--yellow); line-height: 1; }
-  .brand-sub { font-size: 9px; color: #888; text-transform: uppercase; letter-spacing: 0.2em; font-weight: 700; margin-top: 2px; }
-  .period-controls { display: flex; align-items: center; gap: 6px; }
-  .period-label { font-size: 9px; color: #888; text-transform: uppercase; letter-spacing: 0.2em; font-weight: 800; margin-right: 2px; }
-  .period-btn { background: var(--gray-d); color: var(--yellow); border: 2px solid var(--yellow); padding: 5px 10px; font-family: 'Oswald', sans-serif; font-weight: 900; font-size: 11px; text-transform: uppercase; cursor: pointer; letter-spacing: 0.05em; transition: all 0.15s; }
-  .period-btn:hover { background: var(--gray-m); }
-  .period-btn.active { background: var(--yellow); color: var(--black); }
+  .brand-mark { width: 32px; height: 32px; background: var(--yellow); color: var(--black); display: flex; align-items: center; justify-content: center; font-size: 17px; font-weight: 900; }
+  .brand-name { font-family: 'Oswald', sans-serif; font-size: 15px; font-weight: 700; color: var(--text); line-height: 1; letter-spacing: 0.05em; }
+  .brand-sub { font-size: 9px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.2em; font-weight: 600; margin-top: 3px; }
+
+  .period-controls { display: flex; align-items: center; gap: 4px; position: relative; }
+  .period-label { font-size: 9px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.2em; font-weight: 700; margin-right: 6px; }
+  .period-btn { background: transparent; color: var(--text-dim); border: 1px solid var(--border-strong); padding: 5px 10px; font-family: 'Inter', sans-serif; font-weight: 600; font-size: 11px; text-transform: uppercase; cursor: pointer; letter-spacing: 0.05em; transition: all 0.15s; }
+  .period-btn:hover { background: var(--panel-2); color: var(--text); }
+  .period-btn.active { background: var(--yellow); color: var(--black); border-color: var(--yellow); font-weight: 700; }
   .period-btn.custom-btn.active { background: var(--green); color: var(--black); border-color: var(--green); }
 
-  /* Custom range modal */
-  .custom-range-pop { position: absolute; top: 48px; background: var(--gray-d); border: 3px solid var(--yellow); padding: 14px; z-index: 100; display: none; right: 150px; box-shadow: 0 8px 24px rgba(0,0,0,0.8); }
+  .custom-range-pop { position: absolute; top: 38px; background: var(--panel); border: 1px solid var(--yellow); padding: 14px; z-index: 100; display: none; right: 0; box-shadow: 0 8px 24px rgba(0,0,0,0.7); min-width: 250px; }
   .custom-range-pop.open { display: block; }
-  .custom-range-pop h4 { font-family: 'Oswald', sans-serif; font-size: 13px; font-weight: 900; color: var(--yellow); text-transform: uppercase; letter-spacing: 0.15em; margin-bottom: 10px; }
+  .custom-range-pop h4 { font-family: 'Oswald', sans-serif; font-size: 12px; font-weight: 700; color: var(--yellow); text-transform: uppercase; letter-spacing: 0.15em; margin-bottom: 10px; }
   .range-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
-  .range-row label { font-size: 10px; color: #aaa; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 800; width: 40px; }
-  .range-row input { background: var(--black); color: var(--yellow); border: 2px solid var(--yellow); padding: 5px 8px; font-family: 'Oswald', sans-serif; font-weight: 900; font-size: 12px; width: 130px; }
+  .range-row label { font-size: 10px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.1em; font-weight: 600; width: 36px; }
+  .range-row input { background: var(--bg); color: var(--yellow); border: 1px solid var(--border-strong); padding: 5px 8px; font-family: 'Inter', sans-serif; font-weight: 600; font-size: 12px; width: 140px; }
   .range-row input::-webkit-calendar-picker-indicator { filter: invert(75%) sepia(100%) saturate(400%) hue-rotate(0deg); cursor: pointer; }
-  .range-apply { background: var(--yellow); color: var(--black); border: none; padding: 6px 14px; font-family: 'Oswald', sans-serif; font-weight: 900; font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; cursor: pointer; width: 100%; margin-top: 6px; }
-  .range-apply:hover { background: var(--white); }
+  .range-apply { background: var(--yellow); color: var(--black); border: none; padding: 7px 14px; font-family: 'Oswald', sans-serif; font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; cursor: pointer; width: 100%; margin-top: 6px; }
+  .range-apply:hover { background: var(--yellow-soft); }
   .range-preset { display: flex; gap: 4px; margin-top: 6px; }
-  .range-preset button { flex: 1; background: var(--black); color: var(--yellow); border: 1px solid var(--yellow); padding: 4px; font-family: 'Oswald', sans-serif; font-weight: 900; font-size: 9px; cursor: pointer; text-transform: uppercase; }
-  .range-preset button:hover { background: var(--yellow); color: var(--black); }
-  .clock-block { display: flex; align-items: center; gap: 12px; text-align: right; }
-  .clock-time { font-family: 'Oswald', sans-serif; font-size: 18px; font-weight: 900; color: var(--yellow); line-height: 1; }
-  .clock-date { font-size: 9px; color: #888; text-transform: uppercase; letter-spacing: 0.18em; font-weight: 700; margin-top: 2px; }
-  .reset-btn { padding: 5px 10px; font-family: 'Oswald', sans-serif; font-weight: 900; text-transform: uppercase; font-size: 10px; letter-spacing: 0.1em; background: transparent; color: var(--yellow); border: 2px solid var(--yellow); cursor: pointer; }
-  .reset-btn:hover { background: var(--yellow); color: var(--black); }
+  .range-preset button { flex: 1; background: var(--bg); color: var(--text-dim); border: 1px solid var(--border-strong); padding: 4px; font-family: 'Inter', sans-serif; font-weight: 600; font-size: 10px; cursor: pointer; text-transform: uppercase; letter-spacing: 0.05em; }
+  .range-preset button:hover { background: var(--panel-2); color: var(--yellow); }
 
-  /* TICKER */
-  .ticker { flex-shrink: 0; display: flex; align-items: center; background: var(--yellow); color: var(--black); padding: 4px 0; overflow: hidden; height: 26px; border-bottom: 2px solid var(--black); }
-  .ticker-label { flex-shrink: 0; padding: 0 12px; font-family: 'Oswald', sans-serif; font-weight: 900; font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; background: var(--black); color: var(--yellow); height: 20px; display: flex; align-items: center; border-right: 2px solid var(--yellow); }
-  .ticker-content { flex: 1; overflow: hidden; white-space: nowrap; }
-  .ticker-track { display: inline-block; padding-left: 100%; animation: tickerScroll 70s linear infinite; font-weight: 800; font-size: 12px; }
-  .ticker-track span { margin-right: 40px; }
-  .ticker-track strong { font-family: 'Oswald', sans-serif; }
-  @keyframes tickerScroll { 0% { transform: translateX(0); } 100% { transform: translateX(-100%); } }
+  .clock-block { display: flex; align-items: center; gap: 12px; }
+  .clock-time { font-family: 'Oswald', sans-serif; font-size: 18px; font-weight: 700; color: var(--text); line-height: 1; }
+  .clock-date { font-size: 9px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.18em; font-weight: 600; margin-top: 3px; }
+  .reset-btn { padding: 5px 10px; font-family: 'Inter', sans-serif; font-weight: 600; text-transform: uppercase; font-size: 10px; letter-spacing: 0.1em; background: transparent; color: var(--text-dim); border: 1px solid var(--border-strong); cursor: pointer; }
+  .reset-btn:hover { background: var(--panel-2); color: var(--text); }
 
-  /* KPI STRIP */
-  .kpi-strip { flex-shrink: 0; display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; padding: 6px; background: var(--black); border-bottom: 2px solid var(--yellow); }
-  .kpi-cell { padding: 8px 12px; display: flex; flex-direction: column; justify-content: center; position: relative; overflow: hidden; border: 2px solid var(--yellow); min-height: 0; }
-  .kpi-cell.yellow { background: var(--yellow); color: var(--black); border-color: var(--black); }
-  .kpi-cell.green { background: var(--green-bg); border-color: var(--green); }
-  .kpi-cell.green .kpi-cell-value { color: var(--green); }
-  .kpi-cell.red { background: var(--red-bg); border-color: var(--red); }
-  .kpi-cell.red .kpi-cell-value { color: var(--red); }
-  .kpi-cell.blue { background: var(--blue-bg); border-color: var(--blue); }
-  .kpi-cell.blue .kpi-cell-value { color: var(--blue); }
-  .kpi-cell-label { font-size: 9px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.15em; opacity: 0.8; line-height: 1; }
-  .kpi-cell-value { font-family: 'Oswald', sans-serif; font-size: 28px; font-weight: 900; line-height: 1; margin-top: 4px; }
-  .kpi-cell-sub { font-size: 10px; font-weight: 700; opacity: 0.7; margin-top: 3px; text-transform: uppercase; letter-spacing: 0.05em; }
-  .kpi-cell-icon { position: absolute; top: 4px; right: 8px; font-size: 18px; opacity: 0.25; }
+  /* KPI STRIP - cleaner, more restrained */
+  .kpi-strip { flex-shrink: 0; display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; padding: 8px; background: var(--bg); }
+  .kpi-cell {
+    padding: 10px 14px; background: var(--panel); border: 1px solid var(--border);
+    display: flex; flex-direction: column; justify-content: center;
+    position: relative; overflow: hidden; min-height: 0;
+    border-left: 3px solid var(--border-strong);
+  }
+  .kpi-cell.primary { border-left-color: var(--yellow); }
+  .kpi-cell.danger { border-left-color: var(--red); }
+  .kpi-cell.success { border-left-color: var(--green); }
+  .kpi-cell.neutral { border-left-color: var(--border-strong); }
+
+  .kpi-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.15em; color: var(--text-muted); line-height: 1; }
+  .kpi-value { font-family: 'Oswald', sans-serif; font-size: 30px; font-weight: 700; line-height: 1; margin-top: 6px; color: var(--text); }
+  .kpi-cell.primary .kpi-value { color: var(--yellow); }
+  .kpi-cell.danger .kpi-value { color: var(--red); }
+  .kpi-cell.success .kpi-value { color: var(--green); }
+  .kpi-sub { font-size: 11px; font-weight: 500; color: var(--text-dim); margin-top: 4px; }
+  .kpi-icon { position: absolute; top: 6px; right: 10px; font-size: 16px; opacity: 0.15; }
 
   /* QUAD GRID */
-  .quad-grid { flex: 1; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 6px; padding: 6px; min-height: 0; background: var(--black); }
+  .quad-grid { flex: 1; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 8px; padding: 0 8px 8px 8px; min-height: 0; }
 
   /* CELL */
-  .cell { background: var(--gray-d); border: 2px solid var(--yellow); display: flex; flex-direction: column; overflow: hidden; min-height: 0; }
-  .cell.green-b { border-color: var(--green); }
-  .cell.red-b { border-color: var(--red); }
-  .cell.blue-b { border-color: var(--blue); }
-  .cell.orange-b { border-color: var(--orange); }
-  .cell-header { flex-shrink: 0; padding: 5px 10px; background: var(--yellow); color: var(--black); display: flex; align-items: center; justify-content: space-between; height: 24px; }
-  .cell.green-b .cell-header { background: var(--green); color: var(--black); }
-  .cell.red-b .cell-header { background: var(--red); color: var(--white); }
-  .cell.blue-b .cell-header { background: var(--blue); color: var(--white); }
-  .cell.orange-b .cell-header { background: var(--orange); color: var(--black); }
-  .cell-header-title { font-family: 'Oswald', sans-serif; font-weight: 900; font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; }
-  .cell-header-meta { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; }
-  .cell-body { flex: 1; padding: 6px 8px; position: relative; min-height: 0; overflow: hidden; }
+  .cell { background: var(--panel); border: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; min-height: 0; }
+  .cell-header { flex-shrink: 0; padding: 8px 14px; background: var(--panel-2); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+  .cell-header-title { font-family: 'Oswald', sans-serif; font-weight: 700; font-size: 13px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text); }
+  .cell-header-meta { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); }
+  .cell-body { flex: 1; padding: 10px; position: relative; min-height: 0; overflow: hidden; }
 
-  .sub-grid { height: 100%; display: grid; gap: 4px; min-height: 0; }
+  .sub-grid { height: 100%; display: grid; gap: 6px; min-height: 0; }
 
-  /* Q1 */
+  /* ===== Q1 LEADERBOARD ===== */
   .q1-grid { grid-template-rows: 1fr auto; }
-  .leader-list { overflow: hidden; display: flex; flex-direction: column; gap: 2px; }
-  .leader-row { flex: 1; display: grid; grid-template-columns: 28px 1fr 80px; align-items: center; gap: 0 8px; padding: 3px 8px; background: var(--black); border-left: 4px solid var(--gray-m); min-height: 0; font-size: 11px; }
-  .leader-row.gold { background: linear-gradient(90deg, var(--yellow), var(--yellow-d)); color: var(--black); border-left-color: var(--black); }
-  .leader-row.silver { border-left-color: #c0c0c0; }
-  .leader-row.bronze { border-left-color: #cd7f32; }
-  .leader-rank-num { font-family: 'Oswald', sans-serif; font-size: 18px; font-weight: 900; text-align: center; color: var(--yellow); }
-  .leader-row.gold .leader-rank-num { color: var(--black); }
-  .leader-name-big { font-family: 'Oswald', sans-serif; font-size: 13px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.02em; line-height: 1.1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .leader-stats { font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.03em; opacity: 0.85; line-height: 1.2; margin-top: 1px; }
-  .leader-value-big { font-family: 'Oswald', sans-serif; font-size: 14px; font-weight: 900; text-align: right; }
-  .broker-panel { padding: 6px 10px; background: var(--red-bg); border: 2px solid var(--red); display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 10px; }
-  .broker-title { font-family: 'Oswald', sans-serif; font-weight: 900; font-size: 12px; text-transform: uppercase; color: var(--red); letter-spacing: 0.1em; }
-  .broker-dollar { font-family: 'Oswald', sans-serif; font-size: 24px; font-weight: 900; color: var(--yellow); line-height: 1; }
-  .broker-stats { display: flex; gap: 10px; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; color: #ccc; }
-  .broker-stats strong { color: var(--yellow); font-family: 'Oswald', sans-serif; }
+  .leader-list { overflow: hidden; display: flex; flex-direction: column; gap: 3px; min-height: 0; }
+  .leader-row {
+    flex: 1;
+    display: grid; grid-template-columns: 32px 1fr 90px;
+    align-items: center; gap: 12px;
+    padding: 4px 12px;
+    background: var(--panel-2);
+    border-left: 3px solid transparent;
+    min-height: 0;
+  }
+  .leader-row.gold { background: linear-gradient(90deg, rgba(255,194,14,0.15), transparent); border-left-color: var(--yellow); }
+  .leader-row.silver { border-left-color: #999; }
+  .leader-row.bronze { border-left-color: #b87333; }
+  .leader-rank { font-family: 'Oswald', sans-serif; font-size: 18px; font-weight: 700; text-align: center; color: var(--text-muted); }
+  .leader-row.gold .leader-rank { color: var(--yellow); }
+  .leader-name { font-family: 'Oswald', sans-serif; font-size: 14px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.02em; line-height: 1.1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text); }
+  .leader-stats { font-size: 10px; font-weight: 500; color: var(--text-dim); margin-top: 2px; line-height: 1.2; }
+  .leader-stats strong { color: var(--text); font-weight: 600; }
+  .leader-value { font-family: 'Oswald', sans-serif; font-size: 16px; font-weight: 700; text-align: right; color: var(--text); }
+  .leader-row.gold .leader-value { color: var(--yellow); }
 
-  /* Q2 */
-  .q2-grid { grid-template-rows: auto 1fr; grid-template-columns: 1fr; }
-  .product-pills { display: flex; flex-direction: column; gap: 3px; }
-  .product-pill { display: flex; justify-content: space-between; align-items: center; padding: 6px 10px; background: var(--black); border-left: 4px solid var(--yellow); font-size: 11px; }
+  .broker-strip {
+    padding: 8px 14px; background: var(--panel-2); border: 1px solid var(--border-strong); border-left: 3px solid var(--text-dim);
+    display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 14px;
+  }
+  .broker-strip-label { font-family: 'Oswald', sans-serif; font-weight: 700; font-size: 12px; text-transform: uppercase; color: var(--text-dim); letter-spacing: 0.12em; }
+  .broker-strip-value { font-family: 'Oswald', sans-serif; font-size: 22px; font-weight: 700; color: var(--text); line-height: 1; }
+  .broker-strip-stats { display: flex; gap: 14px; font-size: 10px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); }
+  .broker-strip-stats strong { color: var(--text-dim); font-family: 'Oswald', sans-serif; font-weight: 700; }
+
+  /* ===== Q2 PRODUCT MIX + TREND ===== */
+  .q2-grid { grid-template-rows: auto 1fr; }
+  .product-pills { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
+  .product-pill {
+    padding: 8px 12px; background: var(--panel-2); border: 1px solid var(--border);
+    display: flex; flex-direction: column;
+    border-left: 3px solid var(--border-strong);
+  }
   .product-pill.fel { border-left-color: var(--yellow); }
-  .product-pill.ro { border-left-color: var(--green); }
-  .product-pill.resi { border-left-color: var(--blue); }
-  .product-pill.broker { border-left-color: var(--red); }
-  .product-pill-label { font-weight: 800; text-transform: uppercase; color: var(--white); letter-spacing: 0.04em; }
-  .product-pill-vals { display: flex; gap: 10px; align-items: baseline; }
-  .product-pill-count { font-family: 'Oswald', sans-serif; font-size: 15px; font-weight: 900; color: var(--yellow); }
-  .product-pill.ro .product-pill-count { color: var(--green); }
-  .product-pill.resi .product-pill-count { color: var(--blue); }
-  .product-pill.broker .product-pill-count { color: var(--red); }
-  .product-pill-dollar { font-family: 'Oswald', sans-serif; font-size: 11px; font-weight: 700; color: #ccc; }
+  .product-pill.ro { border-left-color: var(--text-dim); }
+  .product-pill.resi { border-left-color: var(--text-muted); }
+  .product-pill.broker { border-left-color: var(--border-strong); }
+  .product-pill-label { font-size: 10px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.1em; }
+  .product-pill-main { font-family: 'Oswald', sans-serif; font-size: 22px; font-weight: 700; color: var(--text); line-height: 1; margin-top: 4px; }
+  .product-pill.fel .product-pill-main { color: var(--yellow); }
+  .product-pill-sub { font-size: 10px; font-weight: 500; color: var(--text-dim); margin-top: 3px; }
 
-  /* Q3 */
-  .q3-grid { grid-template-columns: 1fr 1fr; grid-template-rows: repeat(4, 1fr); gap: 3px; }
-  .size-mini { background: var(--black); padding: 4px 8px; display: grid; grid-template-columns: 50px 1fr; gap: 6px; border-left: 3px solid var(--yellow); min-height: 0; align-items: center; }
-  .size-mini.ro-border { border-left-color: var(--green); }
-  .size-mini.resi-border { border-left-color: var(--blue); }
-  .size-mini-label { font-family: 'Oswald', sans-serif; font-weight: 900; font-size: 13px; color: var(--yellow); }
-  .size-mini.ro-border .size-mini-label { color: var(--green); }
-  .size-mini.resi-border .size-mini-label { color: var(--blue); }
-  .size-mini-body { display: flex; flex-direction: column; gap: 1px; min-height: 0; overflow: hidden; }
-  .size-mini-header { font-size: 9px; color: #888; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 800; }
-  .share-row-mini { display: grid; grid-template-columns: 80px 1fr 38px; align-items: center; gap: 6px; font-size: 10px; line-height: 1.2; }
-  .share-row-mini .rep { font-family: 'Oswald', sans-serif; font-weight: 900; font-size: 10px; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--white); }
-  .share-row-mini .bar-wrap { height: 9px; background: var(--gray-m); position: relative; overflow: hidden; }
-  .share-row-mini .bar-fill { height: 100%; background: var(--yellow); }
-  .share-row-mini .bar-fill.ro { background: var(--green); }
-  .share-row-mini .bar-fill.resi { background: var(--blue); }
-  .share-row-mini .bar-fill.broker { background: var(--red); }
-  .share-row-mini .bar-fill.dim { background: #666; }
-  .share-row-mini .pct { font-family: 'Oswald', sans-serif; font-size: 10px; font-weight: 900; color: var(--yellow); text-align: right; white-space: nowrap; }
+  /* ===== Q3 CONTAINER SHARE ===== */
+  .q3-grid { grid-template-columns: 1fr 1fr; grid-template-rows: repeat(4, 1fr); gap: 4px; }
+  .size-mini {
+    background: var(--panel-2); padding: 5px 10px;
+    display: grid; grid-template-columns: 56px 1fr; gap: 8px;
+    border: 1px solid var(--border);
+    min-height: 0; align-items: center;
+  }
+  .size-mini-label { font-family: 'Oswald', sans-serif; font-weight: 700; font-size: 14px; color: var(--yellow); line-height: 1; }
+  .size-mini-tot { font-size: 9px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.1em; font-weight: 600; margin-top: 2px; }
+  .size-mini-body { display: flex; flex-direction: column; gap: 2px; min-height: 0; overflow: hidden; }
+  .share-row { display: grid; grid-template-columns: 80px 1fr 38px; align-items: center; gap: 8px; font-size: 10px; line-height: 1.2; }
+  .share-row .rep { font-family: 'Oswald', sans-serif; font-weight: 700; font-size: 10px; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text); }
+  .share-row .rep.broker { color: var(--text-dim); font-style: italic; }
+  .share-row .bar { height: 8px; background: var(--border); position: relative; overflow: hidden; }
+  .share-row .bar-fill { height: 100%; background: var(--text-dim); }
+  .share-row .bar-fill.gold { background: var(--yellow); }
+  .share-row .pct { font-family: 'Oswald', sans-serif; font-size: 11px; font-weight: 700; color: var(--text-dim); text-align: right; white-space: nowrap; }
+  .share-row.top .pct { color: var(--yellow); }
 
-  /* Q4 */
-  .q4-grid { grid-template-rows: auto 1fr auto; }
-  .ro-kpi-strip { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }
-  .ro-mini-kpi { padding: 6px 8px; background: var(--black); border: 2px solid var(--green); text-align: center; min-height: 0; }
-  .ro-mini-kpi.green { border-color: var(--green); }
-  .ro-mini-kpi.green .ro-mini-val { color: var(--green); }
-  .ro-mini-kpi.orange { border-color: var(--orange); }
-  .ro-mini-kpi.orange .ro-mini-val { color: var(--orange); }
-  .ro-mini-kpi.yellow { border-color: var(--yellow); }
-  .ro-mini-kpi.yellow .ro-mini-val { color: var(--yellow); }
-  .ro-mini-label { font-size: 8px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.12em; color: #aaa; line-height: 1; }
-  .ro-mini-val { font-family: 'Oswald', sans-serif; font-size: 20px; font-weight: 900; line-height: 1; margin-top: 2px; }
-  .ro-mini-sub { font-size: 8px; font-weight: 700; color: #888; margin-top: 1px; }
-  .ro-size-table { display: flex; flex-direction: column; gap: 2px; min-height: 0; overflow: hidden; }
-  .ro-size-row { display: grid; grid-template-columns: 46px 1fr 50px 70px; align-items: center; gap: 8px; padding: 3px 6px; background: var(--black); font-size: 10px; min-height: 0; flex: 1; }
-  .ro-size-label { font-family: 'Oswald', sans-serif; font-weight: 900; font-size: 14px; color: var(--green); }
-  .ro-size-bar-wrap { height: 8px; background: var(--gray-m); }
-  .ro-size-bar-fill { height: 100%; background: var(--green); }
-  .ro-size-count { font-family: 'Oswald', sans-serif; font-size: 13px; font-weight: 900; text-align: right; color: var(--white); }
-  .ro-size-rev { font-family: 'Oswald', sans-serif; font-size: 11px; font-weight: 800; text-align: right; color: #ccc; }
+  /* ===== Q4 ROLL-OFF (REDESIGNED) =====
+     New focus:
+     - RO velocity (deals/mo trend, leading indicator)
+     - Yield: avg $ per container by size (upsell signal)
+     - Top RO performers (who's driving fleet utilization)
+     - Temp churn risk (1mo terms WILL roll out, need replenishment)
+  */
+  .q4-grid { grid-template-rows: auto auto 1fr; gap: 6px; }
+  .ro-headline {
+    display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 6px;
+  }
+  .ro-headline-cell { padding: 8px 12px; background: var(--panel-2); border: 1px solid var(--border); }
+  .ro-headline-cell.warn { border-left: 3px solid var(--red); }
+  .ro-headline-cell.primary { border-left: 3px solid var(--yellow); }
+  .ro-headline-cell.neutral { border-left: 3px solid var(--text-dim); }
+  .ro-headline-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.18em; color: var(--text-muted); }
+  .ro-headline-val { font-family: 'Oswald', sans-serif; font-size: 22px; font-weight: 700; line-height: 1; margin-top: 3px; color: var(--text); }
+  .ro-headline-cell.warn .ro-headline-val { color: var(--red); }
+  .ro-headline-cell.primary .ro-headline-val { color: var(--yellow); }
+  .ro-headline-sub { font-size: 9px; font-weight: 500; color: var(--text-dim); margin-top: 2px; }
 
-  .chart-wrap { position: relative; width: 100%; height: 100%; }
-  .no-data { padding: 20px; text-align: center; color: #666; font-weight: 700; font-size: 11px; }
+  .ro-yield-table { display: flex; flex-direction: column; gap: 2px; min-height: 0; overflow: hidden; }
+  .ro-yield-row {
+    display: grid; grid-template-columns: 50px 1fr 70px 70px;
+    align-items: center; gap: 10px; padding: 4px 10px;
+    background: var(--panel-2); font-size: 11px;
+    flex: 1; min-height: 0;
+  }
+  .ro-yield-size { font-family: 'Oswald', sans-serif; font-weight: 700; font-size: 14px; color: var(--yellow); }
+  .ro-yield-bar-wrap { height: 9px; background: var(--border); }
+  .ro-yield-bar { height: 100%; background: var(--text-dim); }
+  .ro-yield-bar.top { background: var(--yellow); }
+  .ro-yield-count { font-family: 'Oswald', sans-serif; font-weight: 700; font-size: 13px; text-align: right; color: var(--text); }
+  .ro-yield-rev { font-family: 'Oswald', sans-serif; font-weight: 600; font-size: 11px; text-align: right; color: var(--text-dim); }
+
+  .ro-section-row { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; min-height: 0; }
+  .ro-section { background: var(--panel-2); border: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; min-height: 0; }
+  .ro-section-header {
+    flex-shrink: 0; padding: 5px 10px; background: var(--bg);
+    font-family: 'Oswald', sans-serif; font-size: 10px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.12em; color: var(--text-dim);
+    display: flex; justify-content: space-between; align-items: center;
+    border-bottom: 1px solid var(--border);
+  }
+  .ro-section-body { flex: 1; padding: 6px 8px; min-height: 0; overflow: hidden; display: flex; flex-direction: column; gap: 3px; }
+
+  .ro-rep-row { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center; padding: 3px 4px; font-size: 11px; }
+  .ro-rep-name { font-family: 'Oswald', sans-serif; font-weight: 700; font-size: 11px; text-transform: uppercase; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .ro-rep-vals { display: flex; gap: 8px; align-items: baseline; font-size: 10px; }
+  .ro-rep-vals .cont { font-family: 'Oswald', sans-serif; font-weight: 700; font-size: 12px; color: var(--yellow); }
+  .ro-rep-vals .rev { color: var(--text-dim); }
+
+  .chart-wrap { position: relative; width: 100%; height: 100%; min-height: 0; }
+  .no-data { padding: 20px; text-align: center; color: var(--text-muted); font-weight: 600; font-size: 11px; }
 
   @media (max-width: 1199px) {
     .quad-grid { grid-template-columns: 1fr; grid-template-rows: repeat(4, 1fr); }
@@ -214,12 +265,12 @@
     <div class="upload-logo">
       <div class="logo-mark">P</div>
       <div>
-        <div style="font-family:'Oswald',sans-serif;font-size:22px;font-weight:900;color:var(--yellow);line-height:1">PRIORITY WASTE</div>
-        <div style="font-size:10px;color:#888;text-transform:uppercase;letter-spacing:0.25em;font-weight:800;margin-top:3px">Sales Wallboard</div>
+        <div style="font-family:'Oswald',sans-serif;font-size:20px;font-weight:700;color:var(--text);line-height:1;letter-spacing:0.05em">PRIORITY WASTE</div>
+        <div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.25em;font-weight:600;margin-top:3px">Sales Wallboard</div>
       </div>
     </div>
-    <div class="upload-title">4-panel view.<br /><span class="hl">Everything on one screen.</span></div>
-    <p class="upload-sub">Upload the sales workbook. 4 quadrants · no scroll · no cycling. Leaderboard · Product Mix · Container Share · Roll-Off Capacity.</p>
+    <div class="upload-title">One Screen.<br /><span class="hl">All Sales Data.</span></div>
+    <p class="upload-sub">Upload the workbook. Four panels — leaderboard, product mix, container share, roll-off intelligence. Filterable by period.</p>
     <label id="dropZone" class="drop-zone">
       <input type="file" id="fileInput" accept=".xlsx,.xls" hidden />
       <div class="drop-icon">📤</div>
@@ -239,7 +290,7 @@
         <div class="brand-sub" id="brandSub">Inside + Outside</div>
       </div>
     </div>
-    <div class="period-controls" style="position:relative">
+    <div class="period-controls">
       <div class="period-label">Period:</div>
       <button class="period-btn" data-period="ALL">All Time</button>
       <button class="period-btn" data-period="MTD">This Mo</button>
@@ -253,10 +304,10 @@
         <div class="range-row"><label>From</label><input type="date" id="rangeFrom" /></div>
         <div class="range-row"><label>To</label><input type="date" id="rangeTo" /></div>
         <div class="range-preset">
-          <button data-preset="30">30 Days</button>
-          <button data-preset="60">60 Days</button>
-          <button data-preset="90">90 Days</button>
-          <button data-preset="180">6 Mo</button>
+          <button data-preset="30">30d</button>
+          <button data-preset="60">60d</button>
+          <button data-preset="90">90d</button>
+          <button data-preset="180">6mo</button>
         </div>
         <button class="range-apply" id="rangeApply">Apply Range</button>
       </div>
@@ -269,10 +320,7 @@
       <button class="reset-btn" id="resetBtn">Reset</button>
     </div>
   </div>
-  <div class="ticker">
-    <div class="ticker-label">⚡ LIVE</div>
-    <div class="ticker-content"><div class="ticker-track" id="tickerTrack">Loading...</div></div>
-  </div>
+
   <div class="kpi-strip" id="kpiStrip"></div>
   <div class="quad-grid" id="quadGrid"></div>
 </div>
@@ -280,9 +328,12 @@
 <script>
 const YELLOW = '#FFC20E';
 const BLACK = '#000000';
-const WHITE = '#FFFFFF';
-const RED = '#ff3838';
-const GREEN = '#2ecc71';
+const RED = '#e74c3c';
+const GREEN = '#27ae60';
+const TEXT = '#e8e8e8';
+const TEXT_DIM = '#999999';
+const PANEL = '#161616';
+const BORDER = '#2d2d2d';
 
 const EXCLUDED_REPS = new Set([
   'TEAGAN F', 'TEAGAN FULLER', 'TEAGAN',
@@ -396,7 +447,8 @@ function computeMetrics(workbook) {
       sr: normalizeSR(getCol(r, 'SR')),
       monthlyRev: parseNum(getCol(r, 'MONTHLY REVENUE')),
       year: parseNum(getCol(r, 'YEAR')),
-      month: monthMap[String(getCol(r, 'MONTH') || '').trim().toUpperCase()] || null
+      month: monthMap[String(getCol(r, 'MONTH') || '').trim().toUpperCase()] || null,
+      service: String(getCol(r, 'SERVICE TYPE') || '').trim().toUpperCase()
     }));
   }
 
@@ -407,7 +459,6 @@ function computeMetrics(workbook) {
 }
 
 function buildViewData(metrics, period) {
-  // period is { type: 'ALL' | 'RANGE', startY, startM, endY, endM, label }
   const inRange = (y, m) => {
     if (!y || !m) return false;
     if (period.type === 'ALL') return true;
@@ -420,6 +471,7 @@ function buildViewData(metrics, period) {
   const br = metrics.rawBrokResi.filter(r => inRange(r.year, r.month));
   const lost = metrics.rawLost.filter(r => inRange(r.year, r.month));
 
+  // Rep aggregates
   const repMap = new Map();
   br.forEach(r => {
     if (isExcluded(r.sr)) return;
@@ -447,6 +499,7 @@ function buildViewData(metrics, period) {
     classCount[k]++; classMonthly[k] += r.monthly; classContainers[k] += r.containers;
   });
 
+  // Container share
   const sizeMap = new Map();
   br.forEach(r => {
     if (!r.size || isExcluded(r.sr)) return;
@@ -460,31 +513,67 @@ function buildViewData(metrics, period) {
     repShares: Object.entries(s.byRep).map(([rep, count]) => ({ rep, count, pct: (count / s.total) * 100 })).sort((a, b) => b.count - a.count)
   })).sort((a, b) => b.total - a.total);
 
+  // ===== ROLL-OFF: REBUILT =====
   const roRows = br.filter(r => r.cls === 'RO');
-  const permRO = roRows.filter(r => parseNum(r.term) >= 24);
-  const tempRO = roRows.filter(r => parseNum(r.term) < 24);
-  const roCapacity = {
-    totalContainers: roRows.reduce((s, r) => s + r.containers, 0),
-    permContainers: permRO.reduce((s, r) => s + r.containers, 0),
-    tempContainers: tempRO.reduce((s, r) => s + r.containers, 0),
-    monthlyRev: roRows.reduce((s, r) => s + r.monthly, 0)
-  };
+  const tempRO = roRows.filter(r => parseNum(r.term) <= 1); // 1mo or 0 (unrecorded)
+  const longTermRO = roRows.filter(r => parseNum(r.term) >= 24);
+
+  // Total + mix
+  const roTotalContainers = roRows.reduce((s, r) => s + r.containers, 0);
+  const roTotalDeals = roRows.length;
+  const roMonthlyRev = roRows.reduce((s, r) => s + r.monthly, 0);
+
+  // Yield by size: avg $/container/month
   const roSizeMap = new Map();
   roRows.forEach(r => {
     if (!r.size) return;
-    if (!roSizeMap.has(r.size)) roSizeMap.set(r.size, { size: r.size, count: 0, monthly: 0 });
+    if (!roSizeMap.has(r.size)) roSizeMap.set(r.size, { size: r.size, count: 0, deals: 0, monthly: 0 });
     const o = roSizeMap.get(r.size);
-    o.count += r.containers; o.monthly += r.monthly;
+    o.count += r.containers;
+    o.deals++;
+    o.monthly += r.monthly;
   });
-  const roSizes = [...roSizeMap.values()].sort((a, b) => {
-    const na = parseInt(a.size.match(/\d+/)?.[0] || '0');
-    const nb = parseInt(b.size.match(/\d+/)?.[0] || '0');
-    return na - nb;
+  const roSizes = [...roSizeMap.values()]
+    .filter(s => s.count >= 3) // hide noise sizes
+    .map(s => ({ ...s, avgYield: s.monthly / Math.max(1, s.deals) }))
+    .sort((a, b) => {
+      const na = parseInt(a.size.match(/\d+/)?.[0] || '0');
+      const nb = parseInt(b.size.match(/\d+/)?.[0] || '0');
+      return na - nb;
+    });
+
+  // RO velocity (monthly trend)
+  const roVelocityMap = new Map();
+  metrics.rawBrokResi.forEach(r => {
+    if (r.cls !== 'RO') return;
+    const key = `${r.year}-${String(r.month).padStart(2, '0')}`;
+    if (!roVelocityMap.has(key)) roVelocityMap.set(key, { month: key, deals: 0, containers: 0 });
+    const o = roVelocityMap.get(key);
+    o.deals++;
+    o.containers += r.containers;
   });
+  const roVelocity = [...roVelocityMap.values()]
+    .filter(t => t.deals >= 5)
+    .sort((a, b) => a.month.localeCompare(b.month))
+    .slice(-12);
 
-  const lostMonthly = lost.reduce((s, r) => s + r.monthlyRev, 0);
-  const lostCount = lost.length;
+  // Top RO performers
+  const roRepMap = new Map();
+  roRows.forEach(r => {
+    if (isExcluded(r.sr)) return;
+    if (!roRepMap.has(r.sr)) roRepMap.set(r.sr, { rep: r.sr, deals: 0, containers: 0, monthly: 0 });
+    const o = roRepMap.get(r.sr);
+    o.deals++; o.containers += r.containers; o.monthly += r.monthly;
+  });
+  const topRoReps = [...roRepMap.values()]
+    .filter(r => !isBroker(r.rep))
+    .sort((a, b) => b.monthly - a.monthly).slice(0, 6);
 
+  // RO lost business
+  const roLost = lost.filter(r => r.service === 'RO');
+  const roLostRev = roLost.reduce((s, r) => s + r.monthlyRev, 0);
+
+  // Overall rev trend
   const trendMap = new Map();
   metrics.rawBrokResi.forEach(r => {
     const key = `${r.year}-${String(r.month).padStart(2, '0')}`;
@@ -494,40 +583,35 @@ function buildViewData(metrics, period) {
   });
   const trend = [...trendMap.values()].filter(t => t.deals >= 10).sort((a, b) => a.month.localeCompare(b.month)).slice(-12);
 
-  const lostTrendMap = new Map();
-  metrics.rawLost.forEach(r => {
-    if (!r.year || !r.month) return;
-    const key = `${r.year}-${String(r.month).padStart(2, '0')}`;
-    if (!lostTrendMap.has(key)) lostTrendMap.set(key, { month: key, lost: 0 });
-    lostTrendMap.get(key).lost += r.monthlyRev;
-  });
-  const lostTrend = [...lostTrendMap.values()].sort((a, b) => a.month.localeCompare(b.month)).slice(-12);
+  // Lost
+  const lostMonthly = lost.reduce((s, r) => s + r.monthlyRev, 0);
+  const lostCount = lost.length;
 
-  return { period, totalMonthly, totalDeals, totalContainers, classCount, classMonthly, classContainers,
-    repLeaderboard, brokerStats, sizeArray, roCapacity, roSizes, lostMonthly, lostCount, trend, lostTrend };
+  return {
+    period, totalMonthly, totalDeals, totalContainers,
+    classCount, classMonthly, classContainers,
+    repLeaderboard, brokerStats, sizeArray,
+    roTotalContainers, roTotalDeals, roMonthlyRev,
+    tempROContainers: tempRO.reduce((s, r) => s + r.containers, 0),
+    tempRODeals: tempRO.length,
+    longTermROContainers: longTermRO.reduce((s, r) => s + r.containers, 0),
+    roSizes, roVelocity, topRoReps, roLostRev, roLostCount: roLost.length,
+    lostMonthly, lostCount, trend
+  };
 }
 
-// ========== PERIOD RESOLUTION ==========
 function resolvePeriod(type, metrics, customStart, customEnd) {
-  // Find latest year-month in the data (= "current" for the file)
   const months = metrics.availableMonths;
   if (months.length === 0) return { type: 'ALL', label: 'All Time' };
-
-  const [latestY, latestM] = months[0].split('-').map(Number); // months are desc-sorted
-
+  const [latestY, latestM] = months[0].split('-').map(Number);
   const shiftBack = (y, m, monthsBack) => {
-    let newM = m - monthsBack;
-    let newY = y;
+    let newM = m - monthsBack; let newY = y;
     while (newM <= 0) { newM += 12; newY--; }
     return [newY, newM];
   };
 
-  if (type === 'ALL') {
-    return { type: 'ALL', label: 'All Time' };
-  }
-  if (type === 'MTD') {
-    return { type: 'RANGE', startY: latestY, startM: latestM, endY: latestY, endM: latestM, label: `${latestY}-${String(latestM).padStart(2,'0')}` };
-  }
+  if (type === 'ALL') return { type: 'ALL', label: 'All Time' };
+  if (type === 'MTD') return { type: 'RANGE', startY: latestY, startM: latestM, endY: latestY, endM: latestM, label: `${latestY}-${String(latestM).padStart(2,'0')}` };
   if (type === 'LAST1') {
     const [y, m] = shiftBack(latestY, latestM, 1);
     return { type: 'RANGE', startY: y, startM: m, endY: y, endM: m, label: `${y}-${String(m).padStart(2,'0')}` };
@@ -540,9 +624,7 @@ function resolvePeriod(type, metrics, customStart, customEnd) {
     const [y, m] = shiftBack(latestY, latestM, 5);
     return { type: 'RANGE', startY: y, startM: m, endY: latestY, endM: latestM, label: `Last 6 Mo` };
   }
-  if (type === 'YTD') {
-    return { type: 'RANGE', startY: latestY, startM: 1, endY: latestY, endM: latestM, label: `${latestY} YTD` };
-  }
+  if (type === 'YTD') return { type: 'RANGE', startY: latestY, startM: 1, endY: latestY, endM: latestM, label: `${latestY} YTD` };
   if (type === 'CUSTOM' && customStart && customEnd) {
     return {
       type: 'RANGE',
@@ -557,46 +639,46 @@ function resolvePeriod(type, metrics, customStart, customEnd) {
 let chartInstances = {};
 function destroyAllCharts() { Object.values(chartInstances).forEach(c => c.destroy()); chartInstances = {}; }
 
-const chartFont = { family: "'Open Sans', sans-serif", weight: '800', size: 10 };
+const chartFont = { family: "'Inter', sans-serif", weight: '600', size: 10 };
 const tipConfig = {
-  backgroundColor: YELLOW, titleColor: BLACK, bodyColor: BLACK, borderColor: BLACK, borderWidth: 2,
-  titleFont: { family: "'Oswald', sans-serif", weight: '900', size: 12 },
-  bodyFont: { family: "'Open Sans', sans-serif", weight: '800', size: 12 },
+  backgroundColor: PANEL, titleColor: YELLOW, bodyColor: TEXT, borderColor: YELLOW, borderWidth: 1,
+  titleFont: { family: "'Oswald', sans-serif", weight: '700', size: 12 },
+  bodyFont: { family: "'Inter', sans-serif", weight: '600', size: 11 },
   padding: 8, displayColors: false
 };
 
 function renderKpiStrip(view) {
   const { totalMonthly, totalContainers, totalDeals, brokerStats, lostMonthly, lostCount, period } = view;
   return `
-    <div class="kpi-cell yellow">
-      <div class="kpi-cell-icon">💰</div>
-      <div class="kpi-cell-label">Total New Sales</div>
-      <div class="kpi-cell-value">${fmtMoney(totalMonthly)}</div>
-      <div class="kpi-cell-sub">${fmtInt(totalDeals)} deals · monthly recurring</div>
+    <div class="kpi-cell primary">
+      <div class="kpi-icon">💰</div>
+      <div class="kpi-label">Total New Sales</div>
+      <div class="kpi-value">${fmtMoney(totalMonthly)}</div>
+      <div class="kpi-sub">${fmtInt(totalDeals)} deals · monthly recurring</div>
     </div>
-    <div class="kpi-cell green">
-      <div class="kpi-cell-icon">📦</div>
-      <div class="kpi-cell-label">Containers Sold</div>
-      <div class="kpi-cell-value">${fmtInt(totalContainers)}</div>
-      <div class="kpi-cell-sub">units this period</div>
+    <div class="kpi-cell neutral">
+      <div class="kpi-icon">📦</div>
+      <div class="kpi-label">Containers Sold</div>
+      <div class="kpi-value">${fmtInt(totalContainers)}</div>
+      <div class="kpi-sub">units this period</div>
     </div>
-    <div class="kpi-cell red">
-      <div class="kpi-cell-icon">🤝</div>
-      <div class="kpi-cell-label">Broker Sales</div>
-      <div class="kpi-cell-value">${fmtMoney(brokerStats.monthly)}</div>
-      <div class="kpi-cell-sub">${fmtInt(brokerStats.deals)} deals · ${fmtInt(brokerStats.containers)} cont.</div>
+    <div class="kpi-cell neutral">
+      <div class="kpi-icon">🤝</div>
+      <div class="kpi-label">Broker Sales</div>
+      <div class="kpi-value">${fmtMoney(brokerStats.monthly)}</div>
+      <div class="kpi-sub">${fmtInt(brokerStats.deals)} deals · ${fmtInt(brokerStats.containers)} cont.</div>
     </div>
-    <div class="kpi-cell blue">
-      <div class="kpi-cell-icon">💔</div>
-      <div class="kpi-cell-label">Lost $/Month</div>
-      <div class="kpi-cell-value">${fmtMoney(lostMonthly)}</div>
-      <div class="kpi-cell-sub">${fmtInt(lostCount)} accounts lost</div>
+    <div class="kpi-cell danger">
+      <div class="kpi-icon">💔</div>
+      <div class="kpi-label">Lost Revenue</div>
+      <div class="kpi-value">${fmtMoney(lostMonthly)}</div>
+      <div class="kpi-sub">${fmtInt(lostCount)} accounts · monthly</div>
     </div>
-    <div class="kpi-cell yellow">
-      <div class="kpi-cell-icon">📅</div>
-      <div class="kpi-cell-label">Period</div>
-      <div class="kpi-cell-value" style="font-size:${period.label.length > 12 ? '14px' : '20px'}">${period.label.toUpperCase()}</div>
-      <div class="kpi-cell-sub">use buttons ↑ top bar</div>
+    <div class="kpi-cell neutral">
+      <div class="kpi-icon">📅</div>
+      <div class="kpi-label">Period</div>
+      <div class="kpi-value" style="font-size:${period.label.length > 12 ? '15px' : '22px'}">${period.label.toUpperCase()}</div>
+      <div class="kpi-sub">use buttons ↑ top bar</div>
     </div>
   `;
 }
@@ -604,34 +686,33 @@ function renderKpiStrip(view) {
 function renderQ1(view) {
   const { repLeaderboard, brokerStats } = view;
   const rankClass = i => i === 0 ? 'gold' : i === 1 ? 'silver' : i === 2 ? 'bronze' : '';
-  const rankIcon = i => i === 0 ? '🏆' : i === 1 ? '🥈' : i === 2 ? '🥉' : '';
   return `
     <div class="cell">
       <div class="cell-header">
-        <div class="cell-header-title">🏆 Sales Rep Leaderboard</div>
+        <div class="cell-header-title">Sales Rep Leaderboard</div>
         <div class="cell-header-meta">by Monthly $</div>
       </div>
-      <div class="cell-body" style="padding:4px">
+      <div class="cell-body">
         <div class="sub-grid q1-grid">
           <div class="leader-list">
             ${repLeaderboard.length === 0 ? '<div class="no-data">No rep sales in this period.</div>' :
               repLeaderboard.map((r, i) => `
                 <div class="leader-row ${rankClass(i)}">
-                  <div class="leader-rank-num">${String(i + 1).padStart(2, '0')}</div>
+                  <div class="leader-rank">${String(i + 1).padStart(2, '0')}</div>
                   <div style="min-width:0">
-                    <div class="leader-name-big">${rankIcon(i)} ${r.rep}</div>
-                    <div class="leader-stats">${r.deals}d · ${r.containers}c · FEL ${r.fel} · RO ${r.ro} · Resi ${r.resi}</div>
+                    <div class="leader-name">${r.rep}</div>
+                    <div class="leader-stats"><strong>${r.deals}</strong>d · <strong>${r.containers}</strong>c · FEL ${r.fel} · RO ${r.ro} · Resi ${r.resi}</div>
                   </div>
-                  <div class="leader-value-big">${fmtMoney(r.monthly)}</div>
+                  <div class="leader-value">${fmtMoney(r.monthly)}</div>
                 </div>
               `).join('')}
           </div>
-          <div class="broker-panel">
+          <div class="broker-strip">
             <div>
-              <div class="broker-title">🤝 BROKERS</div>
-              <div class="broker-dollar">${fmtMoney(brokerStats.monthly)}</div>
+              <div class="broker-strip-label">🤝 Brokers</div>
+              <div class="broker-strip-value">${fmtMoney(brokerStats.monthly)}</div>
             </div>
-            <div class="broker-stats">
+            <div class="broker-strip-stats">
               <span><strong>${fmtInt(brokerStats.deals)}</strong> deals</span>
               <span><strong>${fmtInt(brokerStats.containers)}</strong> cont.</span>
               <span>FEL <strong>${brokerStats.fel}</strong></span>
@@ -648,46 +729,34 @@ function renderQ1(view) {
 function renderQ2(view) {
   const { classCount, classMonthly, classContainers, brokerStats } = view;
   return `
-    <div class="cell green-b">
+    <div class="cell">
       <div class="cell-header">
-        <div class="cell-header-title">📊 Product Mix & Revenue Trend</div>
+        <div class="cell-header-title">Product Mix & Revenue Trend</div>
         <div class="cell-header-meta">monthly $</div>
       </div>
-      <div class="cell-body" style="padding:4px">
+      <div class="cell-body">
         <div class="sub-grid q2-grid">
           <div class="product-pills">
-            ${classContainers.FEL > 0 ? `
             <div class="product-pill fel">
-              <div class="product-pill-label">🗑️ FEL (Commercial)</div>
-              <div class="product-pill-vals">
-                <div class="product-pill-count">${fmtInt(classContainers.FEL)}</div>
-                <div class="product-pill-dollar">${fmtInt(classCount.FEL)}d · ${fmtMoney(classMonthly.FEL)}</div>
-              </div>
-            </div>` : ''}
-            ${classContainers.RO > 0 ? `
+              <div class="product-pill-label">FEL · Commercial</div>
+              <div class="product-pill-main">${fmtInt(classContainers.FEL)}</div>
+              <div class="product-pill-sub">${fmtInt(classCount.FEL)} deals · ${fmtMoney(classMonthly.FEL)}</div>
+            </div>
             <div class="product-pill ro">
-              <div class="product-pill-label">🚛 Roll-Off</div>
-              <div class="product-pill-vals">
-                <div class="product-pill-count">${fmtInt(classContainers.RO)}</div>
-                <div class="product-pill-dollar">${fmtInt(classCount.RO)}d · ${fmtMoney(classMonthly.RO)}</div>
-              </div>
-            </div>` : ''}
-            ${classContainers.RESI > 0 ? `
+              <div class="product-pill-label">Roll-Off</div>
+              <div class="product-pill-main">${fmtInt(classContainers.RO)}</div>
+              <div class="product-pill-sub">${fmtInt(classCount.RO)} deals · ${fmtMoney(classMonthly.RO)}</div>
+            </div>
             <div class="product-pill resi">
-              <div class="product-pill-label">🏘️ Residential</div>
-              <div class="product-pill-vals">
-                <div class="product-pill-count">${fmtInt(classContainers.RESI)}</div>
-                <div class="product-pill-dollar">${fmtInt(classCount.RESI)}d · ${fmtMoney(classMonthly.RESI)}</div>
-              </div>
-            </div>` : ''}
-            ${brokerStats.containers > 0 ? `
+              <div class="product-pill-label">Residential</div>
+              <div class="product-pill-main">${fmtInt(classContainers.RESI)}</div>
+              <div class="product-pill-sub">${fmtInt(classCount.RESI)} deals · ${fmtMoney(classMonthly.RESI)}</div>
+            </div>
             <div class="product-pill broker">
-              <div class="product-pill-label">🤝 Broker Channel</div>
-              <div class="product-pill-vals">
-                <div class="product-pill-count">${fmtInt(brokerStats.containers)}</div>
-                <div class="product-pill-dollar">${fmtInt(brokerStats.deals)}d · ${fmtMoney(brokerStats.monthly)}</div>
-              </div>
-            </div>` : ''}
+              <div class="product-pill-label">Broker Channel</div>
+              <div class="product-pill-main">${fmtInt(brokerStats.containers)}</div>
+              <div class="product-pill-sub">${fmtInt(brokerStats.deals)} deals · ${fmtMoney(brokerStats.monthly)}</div>
+            </div>
           </div>
           <div style="min-height:0;overflow:hidden"><div class="chart-wrap"><canvas id="trendChart"></canvas></div></div>
         </div>
@@ -702,22 +771,22 @@ function renderQ3(view) {
   const renderSizeMini = (sizeObj) => {
     if (!sizeObj) return '<div></div>';
     const top4 = sizeObj.repShares.slice(0, 4);
-    const clsClass = sizeObj.cls === 'RO' ? 'ro-border' : sizeObj.cls === 'RESI' ? 'resi-border' : '';
+    const maxPct = top4[0]?.pct || 1;
     return `
-      <div class="size-mini ${clsClass}">
+      <div class="size-mini">
         <div>
           <div class="size-mini-label">${sizeObj.size}</div>
-          <div class="size-mini-header">${fmtInt(sizeObj.total)} tot</div>
+          <div class="size-mini-tot">${fmtInt(sizeObj.total)} units</div>
         </div>
         <div class="size-mini-body">
           ${top4.map((r, i) => {
             const isB = r.rep === 'BROKERS';
-            const barClass = isB ? 'broker' : (sizeObj.cls === 'RO' ? 'ro' : sizeObj.cls === 'RESI' ? 'resi' : (i > 2 ? 'dim' : ''));
-            const repShort = r.rep === 'BROKERS' ? '🤝 BROKERS' : r.rep.length > 12 ? r.rep.substring(0, 11) + '…' : r.rep;
+            const repShort = isB ? '🤝 BROKERS' : (r.rep.length > 12 ? r.rep.substring(0, 11) + '…' : r.rep);
+            const isTop = i === 0;
             return `
-              <div class="share-row-mini">
-                <div class="rep">${repShort}</div>
-                <div class="bar-wrap"><div class="bar-fill ${barClass}" style="width:${r.pct}%"></div></div>
+              <div class="share-row ${isTop ? 'top' : ''}">
+                <div class="rep ${isB ? 'broker' : ''}">${repShort}</div>
+                <div class="bar"><div class="bar-fill ${isTop ? 'gold' : ''}" style="width:${(r.pct / maxPct) * 100}%"></div></div>
                 <div class="pct">${fmtPct(r.pct)}</div>
               </div>`;
           }).join('')}
@@ -725,15 +794,14 @@ function renderQ3(view) {
       </div>`;
   };
   return `
-    <div class="cell blue-b">
+    <div class="cell">
       <div class="cell-header">
-        <div class="cell-header-title">📦 Container Share by Size · Who Sells What</div>
+        <div class="cell-header-title">Container Share by Size · Who Sells What</div>
         <div class="cell-header-meta">% share per rep</div>
       </div>
-      <div class="cell-body" style="padding:4px">
+      <div class="cell-body">
         <div class="sub-grid q3-grid">
-          ${topSizes.length === 0 ? '<div class="no-data" style="grid-column:span 2">No container data for this period.</div>' :
-            topSizes.map(renderSizeMini).join('')}
+          ${topSizes.length === 0 ? '<div class="no-data" style="grid-column:span 2">No container data.</div>' : topSizes.map(renderSizeMini).join('')}
           ${topSizes.length < 8 ? Array.from({length: 8 - topSizes.length}).map(() => '<div></div>').join('') : ''}
         </div>
       </div>
@@ -742,49 +810,93 @@ function renderQ3(view) {
 }
 
 function renderQ4(view) {
-  const { roCapacity, roSizes } = view;
-  const maxCount = roSizes.reduce((m, s) => Math.max(m, s.count), 1);
+  const { roTotalContainers, roTotalDeals, roMonthlyRev, tempROContainers, tempRODeals, longTermROContainers,
+          roSizes, topRoReps, roLostRev, roLostCount } = view;
+
+  // RO velocity for last full month vs prior — used to spot trend
+  const last = view.roVelocity[view.roVelocity.length - 1];
+  const prev = view.roVelocity[view.roVelocity.length - 2];
+  const velocityDelta = (last && prev) ? ((last.deals - prev.deals) / prev.deals) * 100 : 0;
+  const velocityDir = velocityDelta >= 0 ? '▲' : '▼';
+  const velocityClass = velocityDelta >= 0 ? 'success' : 'warn';
+
+  // Avg yield = monthly $ per container
+  const avgYield = roTotalContainers > 0 ? roMonthlyRev / roTotalContainers : 0;
+
+  // Find best yielding size
+  const bestSize = [...roSizes].sort((a, b) => b.avgYield - a.avgYield)[0];
+  const maxRoSize = roSizes.reduce((m, s) => Math.max(m, s.count), 1);
+
   return `
-    <div class="cell orange-b">
+    <div class="cell">
       <div class="cell-header">
-        <div class="cell-header-title">🚛 Roll-Off Capacity · Lost Revenue</div>
-        <div class="cell-header-meta">fleet + churn</div>
+        <div class="cell-header-title">Roll-Off Intelligence</div>
+        <div class="cell-header-meta">velocity · yield · pipeline risk</div>
       </div>
-      <div class="cell-body" style="padding:4px">
+      <div class="cell-body">
         <div class="sub-grid q4-grid">
-          <div class="ro-kpi-strip">
-            <div class="ro-mini-kpi green">
-              <div class="ro-mini-label">📦 Total RO</div>
-              <div class="ro-mini-val">${fmtInt(roCapacity.totalContainers)}</div>
-              <div class="ro-mini-sub">containers</div>
+          <!-- Headline metrics row -->
+          <div class="ro-headline">
+            <div class="ro-headline-cell primary">
+              <div class="ro-headline-label">Avg $ / Container / Mo</div>
+              <div class="ro-headline-val">${fmtMoney(avgYield)}</div>
+              <div class="ro-headline-sub">${fmtInt(roTotalContainers)} active · ${fmtMoney(roMonthlyRev)} total</div>
             </div>
-            <div class="ro-mini-kpi green">
-              <div class="ro-mini-label">🔒 Permanent</div>
-              <div class="ro-mini-val">${fmtInt(roCapacity.permContainers)}</div>
-              <div class="ro-mini-sub">24mo+ term</div>
+            <div class="ro-headline-cell neutral">
+              <div class="ro-headline-label">Best Yield Size</div>
+              <div class="ro-headline-val">${bestSize ? `${bestSize.size}` : '—'}</div>
+              <div class="ro-headline-sub">${bestSize ? `${fmtMoney(bestSize.avgYield)}/mo · ${fmtInt(bestSize.count)} sold` : '—'}</div>
             </div>
-            <div class="ro-mini-kpi orange">
-              <div class="ro-mini-label">⏱️ Temporary</div>
-              <div class="ro-mini-val">${fmtInt(roCapacity.tempContainers)}</div>
-              <div class="ro-mini-sub">&lt;24mo term</div>
-            </div>
-            <div class="ro-mini-kpi yellow">
-              <div class="ro-mini-label">💰 RO Monthly</div>
-              <div class="ro-mini-val">${fmtMoney(roCapacity.monthlyRev)}</div>
-              <div class="ro-mini-sub">recurring</div>
+            <div class="ro-headline-cell warn">
+              <div class="ro-headline-label">⚠ Temp Churn Risk</div>
+              <div class="ro-headline-val">${fmtInt(tempROContainers)}</div>
+              <div class="ro-headline-sub">${fmtInt(tempRODeals)} short-term · need replacement</div>
             </div>
           </div>
-          <div class="ro-size-table">
-            ${roSizes.length === 0 ? '<div class="no-data">No roll-off data for this period.</div>' :
-              roSizes.map(s => `
-                <div class="ro-size-row">
-                  <div class="ro-size-label">${s.size}</div>
-                  <div class="ro-size-bar-wrap"><div class="ro-size-bar-fill" style="width:${(s.count/maxCount)*100}%"></div></div>
-                  <div class="ro-size-count">${fmtInt(s.count)}</div>
-                  <div class="ro-size-rev">${fmtMoney(s.monthly)}</div>
+
+          <!-- Yield by size -->
+          <div class="ro-yield-table">
+            <div style="display:grid;grid-template-columns:50px 1fr 70px 70px;gap:10px;padding:3px 10px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.15em;color:var(--text-muted)">
+              <div>Size</div><div>Volume Share</div><div style="text-align:right">Containers</div><div style="text-align:right">Avg $/Mo</div>
+            </div>
+            ${roSizes.length === 0 ? '<div class="no-data">No roll-off data.</div>' :
+              roSizes.map((s, i) => `
+                <div class="ro-yield-row">
+                  <div class="ro-yield-size">${s.size}</div>
+                  <div class="ro-yield-bar-wrap"><div class="ro-yield-bar ${i === 0 ? 'top' : ''}" style="width:${(s.count/maxRoSize)*100}%"></div></div>
+                  <div class="ro-yield-count">${fmtInt(s.count)}</div>
+                  <div class="ro-yield-rev">${fmtMoney(s.avgYield)}</div>
                 </div>`).join('')}
           </div>
-          <div style="height:70px;min-height:0"><div class="chart-wrap"><canvas id="lostChart"></canvas></div></div>
+
+          <!-- Bottom row: Top RO reps + RO velocity chart -->
+          <div class="ro-section-row">
+            <div class="ro-section">
+              <div class="ro-section-header">
+                <span>Top Roll-Off Reps</span>
+                <span style="color:var(--yellow)">${fmtInt(roTotalDeals)} deals total</span>
+              </div>
+              <div class="ro-section-body">
+                ${topRoReps.length === 0 ? '<div class="no-data">No reps in this period.</div>' :
+                  topRoReps.map(r => `
+                    <div class="ro-rep-row">
+                      <div class="ro-rep-name">${r.rep}</div>
+                      <div class="ro-rep-vals">
+                        <span class="cont">${r.containers}</span>
+                        <span class="rev">${fmtMoney(r.monthly)}</span>
+                      </div>
+                    </div>
+                  `).join('')}
+              </div>
+            </div>
+            <div class="ro-section">
+              <div class="ro-section-header">
+                <span>RO Velocity · Deals/Month</span>
+                ${last ? `<span style="color:${velocityDelta >= 0 ? GREEN : RED}">${velocityDir} ${Math.abs(velocityDelta).toFixed(0)}% MoM</span>` : ''}
+              </div>
+              <div class="ro-section-body" style="padding:4px"><div class="chart-wrap"><canvas id="roVelocityChart"></canvas></div></div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -796,6 +908,7 @@ function renderAll(view) {
   document.getElementById('kpiStrip').innerHTML = renderKpiStrip(view);
   document.getElementById('quadGrid').innerHTML = renderQ1(view) + renderQ2(view) + renderQ3(view) + renderQ4(view);
 
+  // Q2 trend chart
   if (view.trend.length > 0) {
     chartInstances.trendChart = new Chart(document.getElementById('trendChart'), {
       type: 'line',
@@ -804,58 +917,46 @@ function renderAll(view) {
         datasets: [{
           label: 'Monthly Revenue',
           data: view.trend.map(t => t.monthly),
-          borderColor: YELLOW, backgroundColor: 'rgba(255,194,14,0.2)',
-          borderWidth: 3, tension: 0.3, fill: true,
-          pointBackgroundColor: YELLOW, pointBorderColor: BLACK, pointBorderWidth: 1.5, pointRadius: 3
+          borderColor: YELLOW, backgroundColor: 'rgba(255,194,14,0.08)',
+          borderWidth: 2, tension: 0.3, fill: true,
+          pointBackgroundColor: YELLOW, pointBorderColor: BLACK, pointBorderWidth: 1, pointRadius: 3
         }]
       },
       options: {
         responsive: true, maintainAspectRatio: false,
         plugins: { legend: { display: false }, tooltip: tipConfig },
         scales: {
-          x: { ticks: { font: chartFont, color: WHITE, maxRotation: 0 }, grid: { color: '#222' } },
-          y: { ticks: { font: chartFont, color: WHITE, callback: v => `$${(v/1000).toFixed(0)}K` }, grid: { color: '#222' } }
+          x: { ticks: { font: chartFont, color: TEXT_DIM, maxRotation: 0 }, grid: { color: BORDER, drawBorder: false } },
+          y: { ticks: { font: chartFont, color: TEXT_DIM, callback: v => `$${(v/1000).toFixed(0)}K` }, grid: { color: BORDER, drawBorder: false } }
         }
       }
     });
   }
 
-  if (view.lostTrend.length > 0) {
-    chartInstances.lostChart = new Chart(document.getElementById('lostChart'), {
+  // Q4 RO velocity chart
+  if (view.roVelocity.length > 0) {
+    chartInstances.roVelocityChart = new Chart(document.getElementById('roVelocityChart'), {
       type: 'bar',
       data: {
-        labels: view.lostTrend.map(t => t.month.substring(5)),
+        labels: view.roVelocity.map(t => t.month.substring(5)),
         datasets: [{
-          label: 'Monthly $ Lost',
-          data: view.lostTrend.map(t => t.lost),
-          backgroundColor: RED, borderColor: BLACK, borderWidth: 1
+          label: 'RO Deals',
+          data: view.roVelocity.map(t => t.deals),
+          backgroundColor: view.roVelocity.map((_, i, a) => i === a.length - 1 ? YELLOW : '#444'),
+          borderWidth: 0,
+          barPercentage: 0.8
         }]
       },
       options: {
         responsive: true, maintainAspectRatio: false,
         plugins: { legend: { display: false }, tooltip: tipConfig },
         scales: {
-          x: { ticks: { font: chartFont, color: WHITE, maxRotation: 0 }, grid: { color: '#222' } },
-          y: { ticks: { font: chartFont, color: WHITE, callback: v => `$${(v/1000).toFixed(0)}K` }, grid: { color: '#222' } }
+          x: { ticks: { font: chartFont, color: TEXT_DIM, maxRotation: 0 }, grid: { display: false } },
+          y: { ticks: { font: chartFont, color: TEXT_DIM, stepSize: 50 }, grid: { color: BORDER, drawBorder: false }, beginAtZero: true }
         }
       }
     });
   }
-}
-
-function buildTicker(view) {
-  const { totalMonthly, totalDeals, totalContainers, brokerStats, repLeaderboard, lostMonthly, roCapacity, period } = view;
-  const parts = [
-    `📅 <strong>${period.label.toUpperCase()}</strong>`,
-    `💰 <strong>${fmtMoney(totalMonthly)}</strong> total new sales · ${fmtInt(totalDeals)} deals`,
-    `📦 <strong>${fmtInt(totalContainers)}</strong> containers sold`,
-    `🏆 #1 REP: <strong>${repLeaderboard[0]?.rep || '—'}</strong> · ${fmtMoney(repLeaderboard[0]?.monthly || 0)}`,
-    `🤝 BROKERS: <strong>${fmtMoney(brokerStats.monthly)}</strong> · ${fmtInt(brokerStats.containers)} containers`,
-    `🚛 RO FLEET: <strong>${fmtInt(roCapacity.totalContainers)}</strong> out (${fmtInt(roCapacity.permContainers)} perm / ${fmtInt(roCapacity.tempContainers)} temp)`,
-    `❌ LOST: <strong>${fmtMoney(lostMonthly)}</strong>/mo churned`,
-    `⚡ RELIABLE WASTE SERVICE, DONE RIGHT.`
-  ];
-  document.getElementById('tickerTrack').innerHTML = parts.map(p => `<span>▸ ${p}</span>`).join('');
 }
 
 function bindPeriodButtons() {
@@ -864,22 +965,16 @@ function bindPeriodButtons() {
     btn.addEventListener('click', () => {
       const type = btn.dataset.period;
       if (type === 'CUSTOM') {
-        // Toggle popup
-        const pop = document.getElementById('customRangePop');
-        pop.classList.toggle('open');
+        document.getElementById('customRangePop').classList.toggle('open');
         return;
       }
-      // Close popup if open
       document.getElementById('customRangePop').classList.remove('open');
-      // Update active states
       buttons.forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
-      // Apply period
       applyPeriod(type);
     });
   });
 
-  // Custom range presets (days back from today)
   document.querySelectorAll('.range-preset button').forEach(pb => {
     pb.addEventListener('click', () => {
       const days = parseInt(pb.dataset.preset);
@@ -890,7 +985,6 @@ function bindPeriodButtons() {
     });
   });
 
-  // Apply custom range
   document.getElementById('rangeApply').addEventListener('click', () => {
     const from = document.getElementById('rangeFrom').value;
     const to = document.getElementById('rangeTo').value;
@@ -904,7 +998,6 @@ function bindPeriodButtons() {
     applyPeriod('CUSTOM', startDate, endDate);
   });
 
-  // Close popup when clicking outside
   document.addEventListener('click', (e) => {
     const pop = document.getElementById('customRangePop');
     const customBtn = document.getElementById('customBtn');
@@ -919,7 +1012,6 @@ function applyPeriod(type, customStart, customEnd) {
   currentPeriod = period;
   const view = buildViewData(currentMetrics, period);
   renderAll(view);
-  buildTicker(view);
 }
 
 function updateClock() {
@@ -953,7 +1045,6 @@ async function handleFile(file) {
     bindPeriodButtons();
     uploadScreen.style.display = 'none';
     wallboard.classList.add('active');
-    // Default to Last 3 Months (matches the button with .active class in the HTML)
     applyPeriod('LAST3');
   } catch (e) {
     console.error(e);
